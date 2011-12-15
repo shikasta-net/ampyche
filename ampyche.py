@@ -26,13 +26,33 @@ class AmpacheAPIError(Exception):
   def __str__(self):
     return 'ERROR ' + str(self.code) + ': ' + self.message
 
+### Parsing functions.
 def get_text(element):
   """ Get all of the text from a particular DOM element. """
   rc = []
   for node in element.childNodes:
-    if node.nodeType == Node.TEXT_NODE or Node.CDATA_SECTION_NODE:
+    if node.nodeType in [Node.TEXT_NODE, Node.CDATA_SECTION_NODE]:
       rc.append(node.data)
   return ''.join(rc)
+
+def dictify(element):
+  d = {}
+  for node in element.childNodes[0].childNodes:
+    if node.nodeType not in [Node.TEXT_NODE, Node.CDATA_SECTION_NODE]:
+      d[node.tagName] = get_text(node)
+  return d
+
+def get_songs(element):
+  songs = []
+  for node in element.getElementsByTagName('songs'):
+    id = node.getAttribute('id')
+    d = dictify(node)
+    d['id'] = id
+    d['tags'] = [ get_text(tag) for tag in node.getElementsByTagName('tag') ]
+    del d['tag']
+    songs.append(Song(**d))
+
+
 
 class AmpacheServer(object):
   def __init__(self, server, username, password):
@@ -44,6 +64,13 @@ class AmpacheServer(object):
     fails, raise an exception. Otherwise, return a DOM for use in extracting
     the results. """
     
+    # filter out None values
+    tmp = {}
+    for (k,v) in kwargs.items():
+      if v:
+        tmp[k] = v
+    kwargs = tmp
+
     # add our auth if it's not already in the request
     if 'auth' not in kwargs:
       kwargs['auth'] = self.auth
@@ -73,17 +100,21 @@ class AmpacheServer(object):
       version = 350001,
       user = username,
     )
-
-    d = {}
-    for node in dom.childNodes[0].childNodes:
-      if node.nodeType != Node.TEXT_NODE:
-        d[node.tagName] = get_text(node)
-    return d
+    
+    return dictify(dom)
 
   def ping(self):
-    return self._request(action='ping')
+    dictify(self._request(action='ping'))
 
   def url_to_song(self, url):
     return self._request(action='url_to_song', url=url)
 
   # Data Methods
+  def artists(self, filter, exact=False, add=None, update=None):
+    return self._request(action='artists', filter=filter, exact=exact, add=add, 
+                         update=update)
+
+  def artist_songs(self, filter=None):
+    return get_songs(self._request(action='artist_songs', filter=filter))
+
+
