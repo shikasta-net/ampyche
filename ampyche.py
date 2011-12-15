@@ -19,6 +19,8 @@ Playlist = namedtuple('Playlist', ['id', 'name', 'owner', 'items', 'tags', 'type
 Video = namedtuple('Video', ['id', 'title', 'mime', 'resolution', 'size', 'tags', 'url'])
 
 class AmpacheAPIError(Exception):
+  """ Represents errors as specified here:
+  http://ampache.org/wiki/dev:xmlapi:error """
   def __init__(self, code, message):
     self.code = code
     self.message = message
@@ -37,22 +39,26 @@ def get_text(element):
 
 def dictify(element):
   d = {}
-  for node in element.childNodes[0].childNodes:
+  for node in element.childNodes:
     if node.nodeType not in [Node.TEXT_NODE, Node.CDATA_SECTION_NODE]:
       d[node.tagName] = get_text(node)
   return d
 
-def get_songs(element):
-  songs = []
-  for node in element.getElementsByTagName('songs'):
-    id = node.getAttribute('id')
+def get_object(element, tagname):
+  objects = []
+  for node in element.getElementsByTagName(tagname):
     d = dictify(node)
+    id = node.getAttribute('id')
     d['id'] = id
-    d['tags'] = [ get_text(tag) for tag in node.getElementsByTagName('tag') ]
-    del d['tag']
-    songs.append(Song(**d))
 
-
+    # tags don't have tags, but everything else does
+    if tagname != 'tag':
+      d['tags'] = [ get_text(tag) for tag in node.getElementsByTagName('tag') ]
+      if 'tag' in d:
+        del d['tag']
+      print d
+    objects.append(d)
+  return objects
 
 class AmpacheServer(object):
   def __init__(self, server, username, password):
@@ -101,7 +107,7 @@ class AmpacheServer(object):
       user = username,
     )
     
-    return dictify(dom)
+    return dictify(dom.childNodes[0])
 
   def ping(self):
     dictify(self._request(action='ping'))
@@ -111,10 +117,11 @@ class AmpacheServer(object):
 
   # Data Methods
   def artists(self, filter, exact=False, add=None, update=None):
-    return self._request(action='artists', filter=filter, exact=exact, add=add, 
-                         update=update)
+    return get_object(self._request(action='artists', filter=filter, 
+                      exact=exact, add=add, update=update), 'artist')
 
-  def artist_songs(self, filter=None):
-    return get_songs(self._request(action='artist_songs', filter=filter))
+  def artist_songs(self, filter):
+    return get_object(self._request(action='artist_songs', filter=filter), 'song')
 
-
+  def artist_albums(self, filter):
+    return get_object(self._request(action='artist_albums', filter=filter), 'album')
