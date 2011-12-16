@@ -33,6 +33,7 @@ class Artist(BaseObject):
                id=None,
                name=None,
                albums=None,
+               songs=None,
                tags=None,
                preciserating=None,
                rating=None):
@@ -79,6 +80,10 @@ class Song(BaseObject):
   response):
 
   id - album id
+  title - title of the song
+  mime - the mime type of the song
+  genre - the genre of the song
+  genreid - the id of the genre
   artist - artist who wrote the album
   artistid - artist id of the artist
   album - album the song is on
@@ -94,6 +99,10 @@ class Song(BaseObject):
   """
   def __init__(self,
                id=None,
+               title=None,
+               mime=None,
+               genre=None,
+               genreid=None,
                artist=None,
                artistid=None,
                album=None,
