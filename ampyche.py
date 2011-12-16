@@ -56,6 +56,7 @@ class Album(BaseObject):
   disk - the disk number
   tags - list of (tagid, tagstring) tuples
   art - the album art
+  year - year the album was published
   preciserating
   rating
   """
@@ -68,6 +69,7 @@ class Album(BaseObject):
                disk=None,
                tags=None,
                art=None,
+               year=None,
                preciserating=None,
                rating=None):
     # initialize the attributes of this object
