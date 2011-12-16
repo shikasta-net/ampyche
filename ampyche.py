@@ -10,10 +10,11 @@ class BaseObject(object):
   """ Base class for all of the API response containers. """
   def __str__(self):
     s = [self.__class__.__name__ + '(']
-    for (k,v) in dict(self):
-      s.append(k)
-      s.append('=')
-      s.append(repr(v))
+    for key in dir(self):
+      if not key.startswith('_'):
+        s.append(key)
+        s.append('=')
+        s.append(repr(getattr(self, key)))
     return ''.join(s)
 
 class Artist(BaseObject):
