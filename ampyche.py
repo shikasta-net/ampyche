@@ -1,5 +1,6 @@
 from collections import namedtuple
 from hashlib import sha256
+from os.path import join
 from time import time
 from urllib import urlopen, urlencode
 from xml.dom import Node
@@ -266,7 +267,7 @@ def _get_objects(element, tagname):
 
 class AmpacheServer(object):
   def __init__(self, server, username, password):
-    self.server = server
+    self.server = join(server, 'server/xml.server.php?')
     self.auth = self.handshake(username, password)['auth']
 
   def _request(self, **kwargs):
