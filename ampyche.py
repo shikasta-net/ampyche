@@ -290,7 +290,6 @@ class AmpacheServer(object):
     if 'auth' not in kwargs:
       kwargs['auth'] = self.auth
 
-    print urlopen(self.server + urlencode(kwargs.items())).read()
     dom = parse(urlopen(self.server + urlencode(kwargs.items())))
 
     errors = dom.getElementsByTagName('error')
@@ -334,18 +333,56 @@ class AmpacheServer(object):
     return song
 
   # Data Methods
-  def artists(self, filter, exact=False, add=None, update=None):
-    dom = self._request(action='artists', filter=filter, 
-                        exact=exact, add=add, update=update)
-    return _get_objects(dom, 'artist')
 
-  def artist_songs(self, filter):
-    dom = self._request(action='artist_songs', filter=filter)
-    return _get_objects(dom, 'song')
+  # get 'macros'
+  def mk_core_get(action):
+    def f(self, filter, exact=False, add=None, update=None):
+      dom = self._request(action=action, filter=filter, 
+                          exact=exact, add=add, update=update)
+      return _get_objects(dom, action[:-1])
+    return f
 
-  def artist_albums(self, filter):
-    dom = self._request(action='artist_albums', filter=filter)
-    return _get_objects(dom, 'album')
+  def mk_filtered_get(action, tagname, exactallowed=False):
+    def f(self, filter, exact=None):
+      # if exact isn't allowed, complain
+      if not exactallowed and exact:
+        raise AmpacheAPIError(9001, "Exact argument not allowed for this API \
+        call!")
+      dom = self._request(action=action, filter=filter, exact=exact)
+      return _get_objects(dom, tagname)
+    return f
+
+  # by artist
+  artists = mk_core_get('artists')
+  artist_songs = mk_filtered_get('artist_songs', 'song')
+  artist_albums = mk_filtered_get('artist_albums', 'album')
+
+  # by album
+  albums = mk_core_get('albums')
+  album_songs = mk_filtered_get('album_songs', 'song')
+
+  # tag gets
+  tags = mk_filtered_get('tags', 'tag', True)
+  tag = mk_filtered_get('tag', 'tag')
+  tag_artists = mk_filtered_get('tag_artists', 'artist')
+  tag_albums = mk_filtered_get('tag_albums', 'album')
+  tag_songs = mk_filtered_get('tag_songs', 'song')
+
+  # song gets
+  songs = mk_core_get('songs')
+  song = mk_filtered_get('song', 'song')
+
+  # playlist gets
+  playlists = mk_filtered_get('playlists', 'playlist', True)
+  playlist = mk_filtered_get('playlist', 'playlist')
+  playlist_songs = mk_filtered_get('playlist_songs', 'song')
+
+  # searching
+  search_songs = mk_filtered_get('search_songs', 'song')
+
+  # video gets
+  videos = mk_filtered_get('videos', 'video', True)
+  video = mk_filtered_get('video', 'video')
 
   # Control Methods
   def localplay(self, command):
