@@ -1,0 +1,16 @@
+ampyche is a python "binding" for the ampache API. The API calls provided by
+ampyche are intended to be exact mirrors of those on the ampache wiki [1].
+
+ampyche is licenced under the beerware license, so you are free to do whatever
+you want with this code, though bug reports and fixes are appreciated.
+
+example usage:
+
+>>> server = ampyche.AmpacheServer(server, username, password)
+>>> server.artists("meshuggah")
+[Artist(albums=u'12', id=u'746', name=u'Meshuggah', preciserating=u'0', rating=u'0', songs=u'104', tags=[(u'746', u'Technical Post-Thrash'), (u'746', u'Death Metal Swedish'), (u'746', u'Metal'), (u'746', u'Progressive Metal'), (u'746', u'Rock'), (u'746', u'Death Metal')], )]
+>>> delicate = server.songs("delicate")[0]
+>>> print delicate.artist
+Damien Rice
+
+[1]: http://ampache.org/wiki/dev:xmlapi
