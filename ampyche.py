@@ -212,6 +212,8 @@ def _dictify(element):
   d = {}
   for node in element.childNodes:
     if node.nodeType not in [Node.TEXT_NODE, Node.CDATA_SECTION_NODE]:
+      # We also want to keep track of things like artist ids, as well as the
+      # actual artist name.
       if node.hasAttribute('id'):
         d[node.tagName + 'id'] = node.getAttribute('id')
       d[node.tagName] = _get_text(node)
@@ -241,15 +243,14 @@ def _get_objects(element, tagname):
     if tagname != 'tag':
       tags = []
       for tag in node.getElementsByTagName('tag'):
-        tags.append((node.getAttribute('id'), _get_text(tag))
+        tags.append((node.getAttribute('id'), _get_text(tag)))
       d['tags'] = tags
 
     # Remove any errornous 'tag' attribute(s) that were collected.
     if 'tag' in d:
       del d['tag']
-    if 'tagid' in d
+    if 'tagid' in d:
       del d['tagid']
-
 
     objects.append(constructor(**d))
   return objects
