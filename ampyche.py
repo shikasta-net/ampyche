@@ -15,6 +15,8 @@ class BaseObject(object):
         s.append(key)
         s.append('=')
         s.append(repr(getattr(self, key)))
+        s.append(', ')
+    s.append(')')
     return ''.join(s)
 
 class Artist(BaseObject):
