@@ -1,3 +1,14 @@
+"""
+ampache.py: a python 'binding' for ampache. Usage demonstration at the bottom
+of this file.
+
+"THE BEER-WARE LICENSE":
+<tycho@tycho.ws> wrote this project. As long as you retain this notice you
+can do whatever you want with this stuff. If we meet some day, and you think
+this stuff is worth it, you can buy me a beer in return. Tycho Andersen
+(Shamelessly stolen from: http://people.freebsd.org/~phk/)
+"""
+
 from hashlib import sha256
 from os.path import join
 from time import time
@@ -18,6 +29,8 @@ class BaseObject(object):
         s.append(', ')
     s.append(')')
     return ''.join(s)
+  
+  __repr__ = __str__
 
 class Artist(BaseObject):
   """ This class represents a respons from the artist XML. It has the
@@ -270,6 +283,15 @@ def _get_objects(element, tagname):
   return objects
 
 class AmpacheServer(object):
+
+  """ The main server object. Public methods on this object are exactly as they
+  are described here: http://ampache.org/wiki/dev:xmlapi with the sole
+  exception of handshake(), which accepts a username and password and does all
+  the hashing, etc. for you (although you should never need to call
+  handshake(), since the object initializes itself). The API methods will raise
+  an AmpacheAPIError if the API responds with error XML.
+  """
+
   def __init__(self, server, username, password):
     self.server = join(server, 'server/xml.server.php?')
     self.auth = self.handshake(username, password)['auth']
@@ -398,4 +420,45 @@ class AmpacheServer(object):
     """ XXX: democratic() is not well supported, perhaps fix this? """
     assert oid or method not in ['vote', 'devote']
     self._request(action='democratic', method=method, oid=oid)
+
+if __name__ == '__main__':
+  """ Here are a few tests which pass on my ampache server. They also serve as
+  a short example of how the API works. """
+
+  server = 'http://tycho.ws' # this should be the root of your ampache install
+  username = 'someone'
+  import getpass
+  password = getpass.getpass()
+
+  server = ampyche.AmpacheServer(server, username, password)
+
+  # search for artists named meshuggah, there should be only one...
+  [meshuggah] = server.artists("meshuggah")
+
+  # get a list of songs by meshuggah
+  songs = server.artist_songs(meshuggah.id)
+
+  # get a list of albums my meshuggah
+  albums = server.artist_albums(meshuggah.id)
+
+  # get a list of songs on those albums
+  songs_by_album = []
+  for album in albums:
+    songs_by_album += server.album_songs(album.id)
+
+  assert len(songs_by_album) == len(songs), "songs in albums should be all \
+    of the songs availible!"
+
+  # there is only one Primus :-)
+  [primus_playlist] = server.playlists("primus")
+
+  songs = server.playlist_songs(primus_playlist.id)
+  assert len(songs) == int(primus_playlist.items), "Didn't get all the songs \
+    in the playlist"
+
+  try:
+    server.artist_songs(52345232562345)
+    assert False, "Invalid artist."
+  except AmpacheAPIError:
+    pass # I don't even know that many artists!
 
