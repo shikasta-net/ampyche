@@ -304,6 +304,10 @@ class AmpacheServer(object):
 
   # Non-Data Methods
   def handshake(self, username, password):
+    """ Set up this AmpacheServer to auth with the particular username or
+    password. This is called by the constructor, so unless you're doing
+    something fancy, you probably don't ever need to call this. """
+
     ts = str(int(time()))
     passphrase = sha256(ts + sha256(password).hexdigest()).hexdigest()
     
@@ -318,10 +322,15 @@ class AmpacheServer(object):
     return _dictify(dom.childNodes[0])
 
   def ping(self):
-    _dictify(self._request(action='ping'))
+    """ Keep the ampache connection alive. """
+    return _dictify(self._request(action='ping'))
 
   def url_to_song(self, url):
-    return self._request(action='url_to_song', url=url)
+    """ Get the song data back from a particular URL. Returns a single song
+    object. """
+    dom = self._request(action='url_to_song', url=url)
+    [song] = _get_objects(dom, 'song')
+    return song
 
   # Data Methods
   def artists(self, filter, exact=False, add=None, update=None):
@@ -336,4 +345,15 @@ class AmpacheServer(object):
   def artist_albums(self, filter):
     dom = self._request(action='artist_albums', filter=filter)
     return _get_objects(dom, 'album')
+
+  # Control Methods
+  def localplay(self, command):
+    """ Control the localplay mode. """
+    assert command in ['next', 'prev', 'stop', 'play']
+    self._request(action='localplay', command=command)
+
+  def democratic(self, method, oid=None):
+    """ XXX: democratic() is not well supported, perhaps fix this? """
+    assert oid or method not in ['vote', 'devote']
+    self._request(action='democratic', method=method, oid=oid)
 
