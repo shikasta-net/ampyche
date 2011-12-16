@@ -5,8 +5,18 @@ from urllib import urlopen, urlencode
 from xml.dom import Node
 from xml.dom.minidom import parse
 
-# Data structures
-class Artist(object):
+### Data structures
+class BaseObject(object):
+  """ Base class for all of the API response containers. """
+  def __str__(self):
+    s = [self.__class__.__name__ + '(']
+    for (k,v) in dict(self):
+      s.append(k)
+      s.append('=')
+      s.append(repr(v))
+    return ''.join(s)
+
+class Artist(BaseObject):
   """ This class represents a respons from the artist XML. It has the
   attributes listed below (which will be None if they were not present in the
   response):
@@ -31,7 +41,7 @@ class Artist(object):
       if k != 'self':
         setattr(self, k, v)
 
-class Album(object):
+class Album(BaseObject):
   """ This class represents a respons from the album XML. It has the
   attributes listed below (which will be None if they were not present in the
   response):
@@ -63,7 +73,7 @@ class Album(object):
       if k != 'self':
         setattr(self, k, v)
 
-class Song(object):
+class Song(BaseObject):
   """ This class represents a respons from the song XML. It has the
   attributes listed below (which will be None if they were not present in the
   response):
@@ -101,7 +111,7 @@ class Song(object):
       if k != 'self':
         setattr(self, k, v)
 
-class Tag(object):
+class Tag(BaseObject):
   """ This class represents a respons from the tag XML. It has the
   attributes listed below (which will be None if they were not present in the
   response):
@@ -127,7 +137,7 @@ class Tag(object):
       if k != 'self':
         setattr(self, k, v)
 
-class Playlist(object):
+class Playlist(BaseObject):
   """ This class represents a respons from the playlist XML. It has the
   attributes listed below (which will be None if they were not present in the
   response):
@@ -151,7 +161,7 @@ class Playlist(object):
       if k != 'self':
         setattr(self, k, v)
 
-class Video(object):
+class Video(BaseObject):
   """ This class represents a respons from the video XML. It has the
   attributes listed below (which will be None if they were not present in the
   response):
@@ -207,15 +217,18 @@ def _dictify(element):
       d[node.tagName] = _get_text(node)
   return d
 
-def _get_object(element, tagname):
-  """ Get a dictionary representation of an "object", where an object is one
-  of: artist, album, song, tag, playlist, video. The dicts returned have a few
-  corner cases:
-    song['id'] is the id as returned by the API
-    song['tags'] is a list of the tag strings returned by the API
+def _get_objects(element, tagname):
+  """ Return a list of the Album, Artist, Song, Tag, Playlist or Video objects
+  contained in the DOM. Can raise AmpacheAPIError if asked for an invalid tag
+  name. """
 
-  Everything else is just stored as tagname : cdata in the dict.
-  """
+  # Resolve the right container constructor for this tag. This will be used
+  # later, but we do it here to catch tag name errors early.
+  try:
+    constructor = globals()[tagname.title()]
+  except KeyError:
+    raise AmpacheAPIError(9001, "Bad tag name: " + tagname)
+
   objects = []
   for node in element.getElementsByTagName(tagname):
     # Grab the regular elements
@@ -237,7 +250,8 @@ def _get_object(element, tagname):
     if 'tagid' in d
       del d['tagid']
 
-    objects.append(d)
+
+    objects.append(constructor(**d))
   return objects
 
 class AmpacheServer(object):
@@ -301,12 +315,15 @@ class AmpacheServer(object):
 
   # Data Methods
   def artists(self, filter, exact=False, add=None, update=None):
-    return _get_object(self._request(action='artists', filter=filter, 
-                      exact=exact, add=add, update=update), 'artist')
+    dom = self._request(action='artists', filter=filter, 
+                        exact=exact, add=add, update=update)
+    return _get_objects(dom, 'artist')
 
   def artist_songs(self, filter):
-    return _get_object(self._request(action='artist_songs', filter=filter), 'song')
+    dom = self._request(action='artist_songs', filter=filter)
+    return _get_objects(dom, 'song')
 
   def artist_albums(self, filter):
-    return _get_object(self._request(action='artist_albums', filter=filter), 'album')
+    dom = self._request(action='artist_albums', filter=filter)
+    return _get_objects(dom, 'album')
 
