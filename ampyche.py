@@ -29,7 +29,7 @@ class BaseObject(object):
         s.append(', ')
     s.append(')')
     return ''.join(s)
-  
+
   __repr__ = __str__
 
 class Artist(BaseObject):
@@ -46,13 +46,20 @@ class Artist(BaseObject):
   rating
   """
   def __init__(self,
-               id=None,
-               name=None,
-               albums=None,
-               songs=None,
-               tags=None,
-               preciserating=None,
-               rating=None):
+              id=None,
+              name=None,
+              albums=None,
+              songs=None,
+              tags=None,
+              preciserating=None,
+              rating=None
+              ,
+              placeformed=None,
+              summary=None,
+              mbid=None,
+              averagerating=None,
+              yearformed=None,
+              ):
     # initialize the attributes of this object
     for (k,v) in locals().items():
       if k != 'self':
@@ -116,23 +123,45 @@ class Song(BaseObject):
   rating
   """
   def __init__(self,
-               id=None,
-               title=None,
-               mime=None,
-               genre=None,
-               genreid=None,
-               artist=None,
-               artistid=None,
-               album=None,
-               albumid=None,
-               tags=None,
-               track=None,
-               time=None,
-               url=None,
-               size=None,
-               art=None,
-               preciserating=None,
-               rating=None):
+              id=None,
+              title=None,
+              mime=None,
+              genre=None,
+              genreid=None,
+              artist=None,
+              artistid=None,
+              album=None,
+              albumid=None,
+              tags=None,
+              track=None,
+              time=None,
+              url=None,
+              size=None,
+              art=None,
+              preciserating=None,
+              rating=None
+              ,
+              comment=None,
+filename=None,
+replaygain_track_gain=None,
+averagerating=None,
+replaygain_album_peak=None,
+albumartistid=None,
+bitrate=None,
+publisher=None,
+language=None,
+replaygain_track_peak=None,
+albumartist=None,
+mode=None,
+albumartist_mbid=None,
+channels=None,
+rate=None,
+composer=None,
+year=None,
+artist_mbid=None,
+replaygain_album_gain=None,
+album_mbid=None,
+mbid=None):
     # initialize the attributes of this object
     for (k,v) in locals().items():
       if k != 'self':
@@ -300,11 +329,11 @@ class AmpacheServer(object):
     """ Make the request to the server with the given arguments. If the request
     fails, raise an exception. Otherwise, return a DOM for use in extracting
     the results.
-    
+
     This method adds in the self.auth value to the request if it is not already
     present (i.e. you probably don't ever need to worry about
     authenticating)."""
-    
+
     # filter out None values
     tmp = {}
     for (k,v) in kwargs.items():
@@ -336,7 +365,7 @@ class AmpacheServer(object):
 
     ts = str(int(time()))
     passphrase = sha256(ts + sha256(password).hexdigest()).hexdigest()
-    
+
     dom = self._request(
       action = 'handshake',
       auth = passphrase,
@@ -344,7 +373,7 @@ class AmpacheServer(object):
       version = 350001,
       user = username,
     )
-    
+
     return _dictify(dom.childNodes[0])
 
   def ping(self):
@@ -363,7 +392,7 @@ class AmpacheServer(object):
   # get 'macros'
   def mk_core_get(action):
     def f(self, filter, exact=False, add=None, update=None):
-      dom = self._request(action=action, filter=filter, 
+      dom = self._request(action=action, filter=filter,
                           exact=exact, add=add, update=update)
       return _get_objects(dom, action[:-1])
     return f
@@ -461,4 +490,3 @@ if __name__ == '__main__':
     assert False, "Invalid artist."
   except AmpacheAPIError:
     pass # I don't even know that many artists!
-
