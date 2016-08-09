@@ -187,7 +187,10 @@ class Tag(BaseObject):
                songs=None,
                video=None,
                playlist=None,
-               stream=None):
+               stream=None,
+artists=None,
+videos=None,
+playlists=None):
     # initialize the attributes of this object
     for (k,v) in locals().items():
       if k != 'self':
