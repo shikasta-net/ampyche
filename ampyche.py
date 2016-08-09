@@ -139,9 +139,9 @@ class Song(BaseObject):
               size=None,
               art=None,
               preciserating=None,
-              rating=None
-              ,
-              comment=None,
+              rating=None,
+name=None,
+comment=None,
 filename=None,
 replaygain_track_gain=None,
 averagerating=None,
