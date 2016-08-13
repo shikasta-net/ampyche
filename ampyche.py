@@ -127,7 +127,7 @@ class Song(BaseObject):
               title=None,
               mime=None,
               genre=None,
-              genreid=None,
+#              genreid=None,
               artist=None,
               artistid=None,
               album=None,
