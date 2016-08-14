@@ -394,19 +394,20 @@ class AmpacheServer(object):
 
   # get 'macros'
   def mk_core_get(action):
-    def f(self, filter, exact=False, add=None, update=None):
+    def f(self, filter, exact=False, add=None, update=None, limit=5000, offset=0):
       dom = self._request(action=action, filter=filter,
-                          exact=exact, add=add, update=update)
+                          exact=exact, add=add, update=update,
+                          limit=limit, offset=offset)
       return _get_objects(dom, action[:-1])
     return f
 
   def mk_filtered_get(action, tagname, exactallowed=False):
-    def f(self, filter, exact=None):
+    def f(self, filter, exact=None, limit=5000, offset=0):
       # if exact isn't allowed, complain
       if not exactallowed and exact:
-        raise AmpacheAPIError(9001, "Exact argument not allowed for this API \
-        call!")
-      dom = self._request(action=action, filter=filter, exact=exact)
+        raise AmpacheAPIError(9001, "Exact argument not allowed for this API call!")
+      dom = self._request(action=action, filter=filter, exact=exact,
+                          limit=limit, offset=offset)
       return _get_objects(dom, tagname)
     return f
 
