@@ -161,7 +161,8 @@ year=None,
 artist_mbid=None,
 replaygain_album_gain=None,
 album_mbid=None,
-mbid=None):
+mbid=None,
+tempo=None):
     # initialize the attributes of this object
     for (k,v) in locals().items():
       if k != 'self':
